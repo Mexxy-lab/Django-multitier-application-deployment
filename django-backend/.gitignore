@@ -11,3 +11,9 @@ __pycache__
 # Python cache files
 __pycache__/
 *.py[cod]
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
+
+# Migrations cache files
+**/migrations/__pycache__/

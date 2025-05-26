@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 # Load environment variables from .env file
 load_dotenv()
