@@ -39,7 +39,7 @@ docker run -d --name django-mysql \
 
 docker exec -it django-mysql mysql -uroot -p        | Used to Change MySQL user authentication plugin to mysql_native_password
 ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'Admin1234';
-FLUSH PRIVILEGES;
+FLUSH PRIVILEGES;                 | This is just to allow auth to mysql using mysql_native_password
 SELECT user, host, plugin FROM mysql.user WHERE user='root';      | Should output your user, host and plugin as mysql_native_password
 ```
 
@@ -53,8 +53,7 @@ Run the application backend
 
 ```bash
 python manage.py runserver
-python manage.py makemigrations
-python manage.py migrate
+python manage.py migrate                    | Used to update the DB
 python manage.py createsuperuser            | Used to create a superuser admin account
 ```
 
