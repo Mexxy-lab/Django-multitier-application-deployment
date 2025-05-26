@@ -14,7 +14,7 @@ pipeline {
         //     steps {  
         //         checkout([$class: 'GitSCM',   
         //             branches: [[name: '*/main']],   
-        //             userRemoteConfigs: [[url: 'https://github.com/Mexxy-lab/Django-multitier-application-deployment.git', credentialsId: 'git-cred']]  
+        //             userRemoteConfigs: [[url: 'https://github.com/Mexxy-lab/Django-multitier-application-deployment.git', credentialsId: 'pumej-gitpasswd']]  
         //         ])  
         //     }  
         // }
@@ -80,7 +80,7 @@ pipeline {
                 script {
                     dir('ENVX-EKS-Manifests') {
                         // Clone the repo using GitHub credentials
-                        git credentialsId: 'github-cred',
+                        git credentialsId: 'pumej-gitpasswd',
                             url: 'https://github.com/Mexxy-lab/Django-Three-Tier-Manifests.git',
                             branch: 'main'
         
@@ -100,7 +100,7 @@ pipeline {
         
                         // Inject GitHub credentials and push
                         withCredentials([usernamePassword(
-                            credentialsId: 'github-cred',
+                            credentialsId: 'pumej-gitpasswd',
                             usernameVariable: 'GIT_USER',
                             passwordVariable: 'GIT_TOKEN'
                         )]) {
