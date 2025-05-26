@@ -55,7 +55,7 @@ Run the application backend
 python manage.py runserver
 python manage.py makemigrations
 python manage.py migrate
-python manage.py createsuperuser
+python manage.py createsuperuser            | Used to create a superuser admin account
 ```
 
 View container logs if needed
