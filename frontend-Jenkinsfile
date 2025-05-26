@@ -28,11 +28,13 @@ pipeline {
                 dir(env.DIRECTORY) {
                     withSonarQubeEnv('sonar') {
                         sh ''' 
-                            $SCANNER_HOME/bin/sonar-scanner \
-                                -Dsonar.projectKey=django-frontend \
-                                -Dsonar.projectName=django-frontend \
-                                -Dsonar.sources=. \
-                                -Dsonar.login=$SONAR_AUTH_TOKEN
+                            docker run --rm \
+                            -e SONAR_HOST_URL=$SONAR_HOST_URL \
+                            -e SONAR_LOGIN=$SONAR_AUTH_TOKEN \
+                            -v $(pwd):/usr/src \
+                            sonarsource/sonar-scanner-cli \
+                            -Dsonar.projectKey=django-frontend \
+                            -Dsonar.sources=/usr/src
                         '''
                     }
                 }
