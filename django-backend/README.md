@@ -51,7 +51,7 @@ docker-compose up -d
 Run the application backend
 
 ```bash
-python3 manage.py runserver
+python manage.py runserver
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
