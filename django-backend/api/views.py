@@ -1,10 +1,10 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import viewsets, permissions, status # type: ignore
+from rest_framework.views import APIView # type: ignore
+from rest_framework.response import Response # type: ignore
+from rest_framework.decorators import action # type: ignore
+from django.contrib.auth.models import User # type: ignore
+from django.contrib.auth import authenticate # type: ignore
+from rest_framework_simplejwt.tokens import RefreshToken # type: ignore
 
 from .models import Item, Cart, Order
 from .serializers import ItemSerializer, CartSerializer, OrderSerializer

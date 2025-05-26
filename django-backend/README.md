@@ -71,3 +71,19 @@ Test the Mysql connection locally using the below command
 mysql -h 127.0.0.1 -u root -p
 mysql -h 127.0.0.1 -P 3306 -u root -p
 ```
+
+Update the .env file in frontend root directory witht the backend API server URL
+
+- REACT_APP_API_BASE=<http://localhost:8000/api>
+
+Try logging into the frontend of the application locally
+
+```bash
+curl -X POST http://localhost:8000/api/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "pumej", "password": "Emekulus"}'
+```
+
+Now you can access the frontend application locally using the URL, login with the superuser you created or you can register a new user from login page. Django would render the backend successfully.
+
+- <http://localhost:3000/>
