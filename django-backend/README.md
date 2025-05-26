@@ -61,6 +61,7 @@ View container logs if needed
 
 ```bash
 docker logs -f django-mysql
+docker logs <containerName>         | Used to also view logs of mysql container.
 ```
 
 Test the Mysql connection locally using the below command
