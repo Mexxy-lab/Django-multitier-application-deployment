@@ -40,6 +40,7 @@ docker run -d --name django-mysql \
 docker exec -it django-mysql mysql -uroot -p        | Used to Change MySQL user authentication plugin to mysql_native_password
 ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'Admin1234';
 FLUSH PRIVILEGES;
+SELECT user, host, plugin FROM mysql.user WHERE user='root';      | Should output your user, host and plugin as mysql_native_password
 ```
 
 Alternatively, you can use the docker-compose.yaml file to spin up the mysql container.
