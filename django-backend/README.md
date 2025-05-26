@@ -42,6 +42,12 @@ ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'Admin1234';
 FLUSH PRIVILEGES;
 ```
 
+Alternatively, you can use the docker-compose.yaml file to spin up the mysql container.
+
+```bash
+docker-compose up -d
+```
+
 Run the application backend
 
 ```bash
@@ -61,4 +67,5 @@ Test the Mysql connection locally using the below command
 
 ```bash
 mysql -h 127.0.0.1 -u root -p
+mysql -h 127.0.0.1 -P 3306 -u root -p
 ```
