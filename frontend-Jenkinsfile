@@ -38,6 +38,13 @@ pipeline {
                 }
             }
         }
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }        
         stage('Docker Build') {
             steps {
                 script {
@@ -78,37 +85,37 @@ pipeline {
         stage('Update Image Tag in Deployment Repo') {
             steps {
                 script {
-                    dir('ENVX-EKS-Manifests') {
-                        // Clone the repo using GitHub credentials
-                        git credentialsId: 'pumej-gitpasswd',
-                            url: 'https://github.com/Mexxy-lab/Django-Three-Tier-Manifests.git',
-                            branch: 'main'
-        
-                        // Replace the image tag in frontend-manifests/frontend.yaml
+                    // Use Jenkins credentials to authenticate
+                    withCredentials([usernamePassword(
+                        credentialsId: 'pumej-gitpasswd',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )]) {
+
+                        // Clean up if already exists
+                        sh 'rm -rf ENVX-EKS-Manifests'
+
+                        // Clone into desired directory using credentials
                         sh """
-                        sed -i 's|image: pumejlab/django-frontend:.*|image: pumejlab/django-frontend:${env.BUILD_NUMBER}|' frontend-manifests/frontend.yaml
-                        echo "updated image tag in frontend-manifests/frontend.yaml"
+                        git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/Mexxy-lab/Django-Three-Tier-Manifests.git ENVX-EKS-Manifests
                         """
-        
-                        // Git config, commit, and push
-                        sh '''
-                        git config user.name "jenkins-bot"
-                        git config user.email "jenkins@local"
-                        git add frontend-manifests/frontend.yaml
-                        git commit -m "CI: Update django-frontend image tag to ${BUILD_NUMBER}" || echo "No changes to commit"
-                        '''
-        
-                        // Inject GitHub credentials and push
-                        withCredentials([usernamePassword(
-                            credentialsId: 'pumej-gitpasswd',
-                            usernameVariable: 'GIT_USER',
-                            passwordVariable: 'GIT_TOKEN'
-                        )]) {
+
+                        dir('ENVX-EKS-Manifests') {
+                            // Update image tag
                             sh """
-                            git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Mexxy-lab/Django-Three-Tier-Manifests.git
+                            sed -i 's|image: pumejlab/django-frontend:.*|image: pumejlab/django-frontend:${env.BUILD_NUMBER}|' frontend-manifests/frontend.yaml
+                            echo "updated image tag in frontend-manifests/frontend.yaml"
+                            """
+
+                            // Git config, commit, and push
+                            sh '''
+                            git config user.name "jenkins-bot"
+                            git config user.email "jenkins@local"
+                            git add frontend-manifests/frontend.yaml
+                            git commit -m "CI: Update django-frontend image tag to ${BUILD_NUMBER}" || echo "No changes to commit"
                             git push origin main
                             echo "changes pushed to GitHub"
-                            """
+                            '''
                         }
                     }
                 }
