@@ -7,3 +7,7 @@ __pycache__
 
 # CDK asset staging directory
 .cdk.staging
+
+# Python cache files
+__pycache__/
+*.py[cod]
