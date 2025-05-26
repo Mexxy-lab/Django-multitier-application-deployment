@@ -30,18 +30,31 @@ pip install -r requirements.txt
 Make sure to spin up the mysql container or service locally also. This will let Django running locally connect to MySQL at 127.0.0.1.
 
 ```bash
-docker run -d \
-  --name django-mysql \
+docker run -d --name django-mysql \
   -e MYSQL_ROOT_PASSWORD=Admin1234 \
   -e MYSQL_DATABASE=django_database \
   -p 3306:3306 \
+  -v ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf:ro \
   mysql:8.0
+
+docker exec -it django-mysql mysql -uroot -p        | Used to Change MySQL user authentication plugin to mysql_native_password
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'Admin1234';
+FLUSH PRIVILEGES;
 ```
 
 Run the application backend
 
 ```bash
 python3 manage.py runserver
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+View container logs if needed
+
+```bash
+docker logs -f django-mysql
 ```
 
 Test the Mysql connection locally using the below command
