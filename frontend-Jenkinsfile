@@ -5,7 +5,7 @@ pipeline {
         SONAR_AUTH_TOKEN = credentials('sonar-token')
         DOCKER_CRED = 'docker-cred'
         IMAGE = 'django-frontend'
-        REPO_NAME = 'madeep2669'
+        REPO_NAME = 'pumej2468'
         DIRECTORY = 'django-frontend'
     }
 
@@ -14,7 +14,7 @@ pipeline {
             steps {  
                 checkout([$class: 'GitSCM',   
                     branches: [[name: '*/main']],   
-                    userRemoteConfigs: [[url: 'https://github.com/Madeep9347/Django-Three-Tier.git', credentialsId: 'git-cred']]  
+                    userRemoteConfigs: [[url: 'https://github.com/Mexxy-lab/Django-multitier-application-deployment.git', credentialsId: 'git-cred']]  
                 ])  
             }  
         } 
@@ -66,12 +66,12 @@ pipeline {
                     dir('ENVX-EKS-Manifests') {
                         // Clone the repo using GitHub credentials
                         git credentialsId: 'github-cred',
-                            url: 'https://github.com/Madeep9347/Django-Three-Tier-Manifests.git',
+                            url: 'https://github.com/Mexxy-lab/Django-Three-Tier-Manifests.git',
                             branch: 'main'
         
                         // Replace the image tag in frontend-manifests/frontend.yaml
                         sh """
-                        sed -i 's|image: madeep2669/django-frontend:.*|image: madeep2669/django-frontend:${env.BUILD_NUMBER}|' frontend-manifests/frontend.yaml
+                        sed -i 's|image: pumej2468/django-frontend:.*|image: pumej2468/django-frontend:${env.BUILD_NUMBER}|' frontend-manifests/frontend.yaml
                         echo "updated image tag in frontend-manifests/frontend.yaml"
                         """
         
@@ -90,7 +90,7 @@ pipeline {
                             passwordVariable: 'GIT_TOKEN'
                         )]) {
                             sh """
-                            git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Madeep9347/Django-Three-Tier-Manifests.git
+                            git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Mexxy-lab/Django-Three-Tier-Manifests.git
                             git push origin main
                             echo "changes pushed to GitHub"
                             """
