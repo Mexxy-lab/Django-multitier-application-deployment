@@ -1,0 +1,112 @@
+pipeline {
+    agent any
+
+    environment {
+        SONAR_AUTH_TOKEN = credentials('sonar-token')
+        DOCKER_CRED = 'docker-cred'
+        IMAGE = 'django-backend'
+        REPO_NAME = 'madeep2669'
+        DIRECTORY = 'django-backend'
+    }
+
+    stages {
+        stage('Checkout Backend Code') {  
+            steps {  
+                checkout([$class: 'GitSCM',   
+                    branches: [[name: '*/main']],   
+                    userRemoteConfigs: [[url: 'https://github.com/Madeep9347/Django-Three-Tier.git', credentialsId: 'git-cred']]  
+                ])  
+            }  
+        } 
+        stage('SonarQube Analysis') {
+            steps {
+                dir(env.DIRECTORY) {
+                    withSonarQubeEnv('sonar') {
+                        sh ''' 
+                            $SCANNER_HOME/bin/sonar-scanner \
+                                -Dsonar.projectKey=django-backend \
+                                -Dsonar.projectName=django-backend \
+                                -Dsonar.sources=. \
+                                -Dsonar.login=$SONAR_AUTH_TOKEN
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Docker Build') {
+            steps {
+                script {
+                    dir(env.DIRECTORY) {
+                        sh """
+                        docker build -t ${env.REPO_NAME}/${env.IMAGE}:${env.BUILD_NUMBER} .
+                        """
+                    }
+                }
+            }
+        }
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: env.DOCKER_CRED,
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${env.REPO_NAME}/${env.IMAGE}:${env.BUILD_NUMBER}
+                        """
+                    }
+                }
+            }
+        }
+        stage('Update Image Tag in Deployment Repo') {
+            steps {
+                script {
+                    dir('ENVX-EKS-Manifests') {
+                        // Clone the repo using GitHub credentials
+                        git credentialsId: 'github-cred',
+                            url: 'https://github.com/Madeep9347/Django-Three-Tier-Manifests.git',
+                            branch: 'main'
+        
+                        // Replace the image tag in backend-manifests/django-backend.yaml
+                        sh """
+                        sed -i 's|image: madeep2669/django-backend:.*|image: madeep2669/django-backend:${env.BUILD_NUMBER}|' backend-manifests/backend.yaml
+                        echo "updated image tag in backend-manifests/backend.yaml"
+                        """
+        
+                        // Git config, commit, and push
+                        sh '''
+                        git config user.name "jenkins-bot"
+                        git config user.email "jenkins@local"
+                        git add backend-manifests/backend.yaml
+                        git commit -m "CI: Update django-backend image tag to ${BUILD_NUMBER}" || echo "No changes to commit"
+                        '''
+        
+                        // Inject GitHub credentials and push
+                        withCredentials([usernamePassword(
+                            credentialsId: 'github-cred',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_TOKEN'
+                        )]) {
+                            sh """
+                            git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/Madeep9347/Django-Three-Tier-Manifests.git
+                            git push origin main
+                            echo "changes pushed to GitHub"
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Docker image pushed: ${env.REPO_NAME}/${env.IMAGE}:${env.BUILD_NUMBER}"
+        }
+        failure {
+            echo "Build or push failed."
+        }
+    }
+}

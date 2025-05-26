@@ -1,0 +1,39 @@
+/* src/Payment.css */
+
+.payment-container {
+  max-width: 400px;
+  margin: 30px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  text-align: center;
+  background-color: #f9f9f9;
+}
+
+.payment-form input {
+  display: block;
+  width: 90%;
+  margin: 10px auto;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+.payment-form button {
+  padding: 10px 20px;
+  background-color: #2e8b57;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.payment-form button:hover {
+  background-color: #246b45;
+}
+
+.payment-success {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 1.2rem;
+  color: green;
+}
