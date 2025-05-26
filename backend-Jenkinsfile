@@ -27,15 +27,23 @@ pipeline {
             steps {
                 dir(env.DIRECTORY) {
                     withSonarQubeEnv('sonar') {
-                        sh ''' 
-                            docker run --rm \
-                            -e SONAR_HOST_URL=$SONAR_HOST_URL \
-                            -e SONAR_LOGIN=$SONAR_AUTH_TOKEN \
-                            -v $(pwd):/usr/src \
-                            sonarsource/sonar-scanner-cli \
-                            -Dsonar.projectKey=django-backend \
-                            -Dsonar.sources=/usr/src
-                        '''
+                        withCredentials([usernamePassword(
+                            credentialsId: 'pumej-dockerhubtoken',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+                            sh '''
+                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                                docker run --rm \
+                                    -e SONAR_HOST_URL=$SONAR_HOST_URL \
+                                    -e SONAR_LOGIN=$SONAR_AUTH_TOKEN \
+                                    -v $(pwd):/usr/src \
+                                    sonarsource/sonar-scanner-cli \
+                                    -Dsonar.projectKey=django-backend \
+                                    -Dsonar.sources=/usr/src
+                            '''
+                        }
                     }
                 }
             }
