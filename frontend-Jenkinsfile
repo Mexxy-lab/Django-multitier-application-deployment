@@ -3,20 +3,25 @@ pipeline {
 
     environment {
         SONAR_AUTH_TOKEN = credentials('sonar-token')
-        DOCKER_CRED = 'docker-cred'
+        DOCKERHUB_CREDENTIALS = credentials('pumej-dockerhubtoken')
         IMAGE = 'django-frontend'
-        REPO_NAME = 'pumej2468'
+        REPO_NAME = 'pumejlab'
         DIRECTORY = 'django-frontend'
     }
 
     stages {
-        stage('Checkout frontend Code') {  
-            steps {  
-                checkout([$class: 'GitSCM',   
-                    branches: [[name: '*/main']],   
-                    userRemoteConfigs: [[url: 'https://github.com/Mexxy-lab/Django-multitier-application-deployment.git', credentialsId: 'git-cred']]  
-                ])  
-            }  
+        // stage('Checkout frontend Code') {  
+        //     steps {  
+        //         checkout([$class: 'GitSCM',   
+        //             branches: [[name: '*/main']],   
+        //             userRemoteConfigs: [[url: 'https://github.com/Mexxy-lab/Django-multitier-application-deployment.git', credentialsId: 'git-cred']]  
+        //         ])  
+        //     }  
+        // }
+        stage('SCM Checkout') {
+            steps{
+           git branch: 'main', url: 'https://github.com/Mexxy-lab/Django-multitier-application-deployment.git'
+            }
         } 
         stage('SonarQube Analysis') {
             steps {
@@ -44,22 +49,32 @@ pipeline {
                 }
             }
         }
-        stage('Push to DockerHub') {
+        stage('Login to dockerhub') {
+            steps{
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+            }
+        }        
+        stage('Trivy Scan (Aqua)') {
             steps {
                 script {
-                    withCredentials([usernamePassword(
-                        credentialsId: env.DOCKER_CRED,
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh """
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push ${env.REPO_NAME}/${env.IMAGE}:${env.BUILD_NUMBER}
-                        """
-                    }
+                    sh '''
+                    echo "🔍 Running Trivy vulnerability scan..."
+                    
+                    # Run Trivy with severity filter and a timeout
+                    trivy image \
+                      --scanners vuln \
+                      --severity HIGH,CRITICAL \
+                      --timeout 10m \
+                      $REPO_NAME/$IMAGE:$BUILD_NUMBER
+                    '''
                 }
             }
         }
+        stage('Push image to DockerHub') {
+            steps{
+                sh 'docker push $REPO_NAME/$IMAGE:$BUILD_NUMBER'
+            }
+        }        
         stage('Update Image Tag in Deployment Repo') {
             steps {
                 script {
@@ -71,7 +86,7 @@ pipeline {
         
                         // Replace the image tag in frontend-manifests/frontend.yaml
                         sh """
-                        sed -i 's|image: pumej2468/django-frontend:.*|image: pumej2468/django-frontend:${env.BUILD_NUMBER}|' frontend-manifests/frontend.yaml
+                        sed -i 's|image: pumejlab/django-frontend:.*|image: pumejlab/django-frontend:${env.BUILD_NUMBER}|' frontend-manifests/frontend.yaml
                         echo "updated image tag in frontend-manifests/frontend.yaml"
                         """
         
