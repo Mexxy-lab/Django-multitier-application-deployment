@@ -34,7 +34,7 @@ pipeline {
                                 -e SONAR_TOKEN=$SONAR_AUTH_TOKEN \
                                 -v $(pwd):/usr/src \
                                 sonarsource/sonar-scanner-cli \
-                                -Dsonar.projectKey=django-backend \
+                                -Dsonar.projectKey=django-frontend \
                                 -Dsonar.sources=/usr/src
                         '''
                     }
