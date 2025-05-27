@@ -47,6 +47,7 @@ Alternatively, you can use the docker-compose.yaml file to spin up the mysql con
 
 ```bash
 docker-compose up -d
+docker run -d --name sonarqube   -p 9000:9000   sonarqube:latest
 ```
 
 Run the application backend
