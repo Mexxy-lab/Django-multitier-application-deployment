@@ -25,7 +25,7 @@ pipeline {
             }
         }
         // Server is ran in docker         
-        stage('SonarQube Analysis') {
+        stage('SonarQube Analysis on Docker') {
             steps {
                 dir(env.DIRECTORY) {
                     withSonarQubeEnv('sonar') {
@@ -44,7 +44,7 @@ pipeline {
             }
         }
         // When Sonarqube server is ran on VM host where sonarqube is installed!!!
-        stage('SonarQube Analysis') {
+        stage('SonarQube Analysis on Local') {
             steps {
                 withSonarQubeEnv('sonar2') {
                 sh '''
