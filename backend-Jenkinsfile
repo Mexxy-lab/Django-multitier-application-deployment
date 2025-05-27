@@ -23,21 +23,16 @@ pipeline {
            git branch: 'main', url: 'https://github.com/Mexxy-lab/Django-multitier-application-deployment.git'
             }
         }         
-        stage('SonarQube Analysis') {
-            steps {
-                dir(env.DIRECTORY) {
-                    withSonarQubeEnv('sonar') {
-                        withCredentials([usernamePassword(
-                            credentialsId: 'pumej-dockerhubtoken',
-                            usernameVariable: 'DOCKER_USER',
-                            passwordVariable: 'DOCKER_PASS'
-                        )]) {
+        stages {
+            stage('SonarQube Analysis') {
+                steps {
+                    dir(env.DIRECTORY) {
+                        withSonarQubeEnv('sonar') {
                             sh '''
-                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-
+                                echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
                                 docker run --rm \
                                     -e SONAR_HOST_URL=$SONAR_HOST_URL \
-                                    -e SONAR_LOGIN=$SONAR_AUTH_TOKEN \
+                                    -e SONAR_TOKEN=$SONAR_AUTH_TOKEN \
                                     -v $(pwd):/usr/src \
                                     sonarsource/sonar-scanner-cli \
                                     -Dsonar.projectKey=django-backend \
