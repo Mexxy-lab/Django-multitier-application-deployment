@@ -8,9 +8,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
-# Copy everything else
+# Copy everything else (except what's in .dockerignore)
 COPY . .
-COPY .env .env
 
 # Expose port 3001
 EXPOSE 3001

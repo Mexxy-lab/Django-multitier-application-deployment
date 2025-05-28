@@ -13,9 +13,32 @@ services:
     volumes:
       - ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf:ro
       - db_data:/var/lib/mysql
-
     command: >
       --default-authentication-plugin=mysql_native_password
 
+  backend:
+    build:
+      context: ./django-backend
+      dockerfile: Dockerfile
+    container_name: django-backend
+    volumes:
+      - ./django-backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./django-backend/.env
+    depends_on:
+      - db
+    command: >
+      sh -c "
+        echo 'Waiting for MySQL...' &&
+        while ! nc -z db 3306; do sleep 1; done &&
+        echo 'MySQL is up. Running migrations and seeding data...' &&
+        python manage.py migrate &&
+        python manage.py seed_items &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+
 volumes:
   db_data:
+

@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from dotenv import load_dotenv # type: ignore
+# from dotenv import load_dotenv # type: ignore Used for local testing
 
 # Load environment variables from .env file
-load_dotenv()
+# load_dotenv() # Only used for local testing
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -12,10 +12,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 # Allowed Hosts
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") or ["*"]
+
+# If DEBUG is False, ensure SECRET_KEY and DB settings are set
+if not DEBUG:
+    assert SECRET_KEY != 'fallback-secret-key', "SECRET_KEY must be set in production"
+    assert os.getenv("DB_NAME") and os.getenv("DB_USER") and os.getenv("DB_PASSWORD"), "Database env vars must be set"
 
 # Application definition
 INSTALLED_APPS = [
