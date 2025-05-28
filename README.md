@@ -1,45 +1,5 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3001](http://localhost:3001) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Exposing Minikube-Based Application via Cloudflare Tunnel
+# 🌐 Exposing Minikube-Based Application via Cloudflare Tunnel
 
 This guide walks you through deploying a multi-tier application (frontend, backend, MySQL) on Kubernetes using Minikube, with public HTTPS access via Cloudflare Tunnel and TLS certificates from Let's Encrypt.
 
@@ -47,21 +7,21 @@ This guide walks you through deploying a multi-tier application (frontend, backe
 
 ## 🧱 Architecture Overview
 
-- **Kubernetes**: Minikube on Ubuntu 22.04
-- **Ingress**: NGINX Ingress installed from GitHub YAML
+- **Kubernetes**: Minikube on Ubuntu 22.04  
+- **Ingress**: NGINX Ingress installed from GitHub YAML  
 - **App Components**:
   - Frontend (port `80`)
-  - Backend (port `5000`)
+  - Backend (port `8000`)
   - MySQL (port `3306`)
-- **Domain**: `pumej.shop` managed via Cloudflare
-- **Tunnel Access**: `django.pumej.shop` via Cloudflare Tunnel
+- **Domain**: `pumej.com` managed via Cloudflare  
+- **Tunnel Access**: `django.pumej.com` via Cloudflare Tunnel
 
 ---
 
 ## ✅ Prerequisites
 
 - Minikube running locally
-- Domain registered on Cloudflare (e.g., `pumej.shop`)
+- Domain registered on Cloudflare (e.g., `pumej.com`)
 - Cloudflare account & API access
 - `cloudflared` installed
 - Ingress NGINX installed via YAML:
@@ -76,52 +36,42 @@ This guide walks you through deploying a multi-tier application (frontend, backe
 
 ### 1️⃣ Deploy Your App
 
-Deploy frontend, backend, MySQL, and Ingress resources.
-
-#### Example Ingress
-
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: app-ingress
-  namespace: django
-  annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: django.pumej.shop
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend-service
-            port:
-              number: 80
-      - path: /api
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: backend-service
-            port:
-              number: 5000
-  tls:
-  - hosts:
-    - django.pumej.shop
-    secretName: django-tls
-```
-
-Apply Ingress:
+Deploy frontend, backend, MySQL, and Ingress resources. Follow the below sequence:
 
 ```bash
-kubectl apply -f app-ingress.yaml
+kubectl apply -f namespace.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.1/cert-manager.yaml
+kubectl apply -f cluster-issuer.yaml
+kubectl apply -f secrets.yaml
+kubectl apply -f mysqlstatefulset.yaml
+kubectl apply -f backend-manifests/backend.yaml
+kubectl apply -f frontend-manifests/frontend.yaml
+kubectl apply -f ingress.yaml
 ```
 
----
+Or run the deploy script on the terminal
+
+```bash
+./deploy.sh
+```
+
+Once deployed, **migrate the database** in the Django backend: You need to create the database table first
+
+```bash
+kubectl exec -it mysql-0 -n django -- mysql -u root -p        | Login with password set in secrets file. 
+CREATE DATABASE django_database;
+
+kubectl exec -it django-backend-559844868-9gdgj -n django -- python manage.py makemigrations -n django
+kubectl exec -it django-backend-559844868-9gdgj -n django -- python manage.py migrate
+kubectl exec -it django-backend-559844868-9gdgj -n django -- python manage.py createsuperuser
+```
+
+You can find the backend pod name using:
+
+```bash
+kubectl get pods -n django
+kubectl get svc -n ingress-nginx
+```
 
 ### 2️⃣ Install cert-manager & ClusterIssuer
 
@@ -131,48 +81,18 @@ Install cert-manager (for Let’s Encrypt TLS):
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.1/cert-manager.yaml
 ```
 
-#### Create `cluster-issuer.yaml`
-
-```yaml
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-  namespace: django
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: pumej1985@gmail.com
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-```
-
-Apply it:
-
-```bash
-kubectl apply -f cluster-issuer.yaml
-```
-
----
-
 ### 3️⃣ Port-Forward NGINX Ingress Locally
 
 ```bash
-kubectl port-forward svc/ingress-nginx-controller 8085:80 -n ingress-nginx
-kubectl port-forward svc/ingress-nginx-controller 8086:80 -n ingress-nginx
+kubectl port-forward svc/ingress-nginx-controller 8000:80 -n ingress-nginx
 ```
-
----
 
 ### 4️⃣ Configure Cloudflare Tunnel
 
 #### Install `cloudflared`
 
 ```bash
+sudo apt update
 sudo apt install -y cloudflared
 ```
 
@@ -180,30 +100,27 @@ sudo apt install -y cloudflared
 
 ```bash
 cloudflared tunnel login
-cloudflared tunnel create django-tunnel
+cloudflared tunnel create django-tunnel         | Used to generate the Tunnel ID 
 ```
 
 #### Configure Tunnel
 
 ```bash
+sudo mkdir -p /etc/cloudflared
 sudo nano /etc/cloudflared/config.yml
 ```
 
 Paste the following:
 
 ```yaml
-tunnel: ee4fb984-c29b-4ab5-83a8-f9eb3c5b5af2
-credentials-file: /home/nepra/.cloudflared/ee4fb984-c29b-4ab5-83a8-f9eb3c5b5af2.json
+tunnel: XXX-ID
+credentials-file: /home/nepra/.cloudflared/XXX.json
 
 ingress:
-  - hostname: app.pumej.shop
-    service: http://127.0.0.1:8085
-  - hostname: django.pumej.shop
-    service: http://127.0.0.1:8086
+  - hostname: django.pumej.com
+    service: http://127.0.0.1:Nodeport
   - service: http_status:404
 ```
-
----
 
 ### 5️⃣ Start Cloudflared as a Service
 
@@ -215,14 +132,12 @@ sudo systemctl status cloudflared
 
 Ensure status is `active (running)`.
 
----
-
 ### 6️⃣ Configure Cloudflare DNS
 
 Link your domain to the tunnel:
 
 ```bash
-cloudflared tunnel route dns django-tunnel django.pumej.shop
+cloudflared tunnel route dns django-tunnel django.pumej.com
 ```
 
 Or add manually via Cloudflare Dashboard:
@@ -232,28 +147,25 @@ Or add manually via Cloudflare Dashboard:
 - Target: `<your-tunnel-id>.cfargotunnel.com`
 - Proxy status: **Proxied**
 
----
-
 ## ✅ Final Checks
 
 - DNS resolves:
 
   ```bash
-  dig CNAME django.pumej.shop +short
+  dig CNAME django.pumej.com
   ```
 
 - Check ingress:
 
   ```bash
   kubectl get ingress -n django
+  kubectl describe ingress django-ingress -n django
   ```
 
 Now visit:  
-🔗 <https://django.pumej.shop>
+🔗 <https://django.pumej.com>
 
 You should see your frontend served over HTTPS.
-
----
 
 ## 🧼 Cleanup
 
@@ -265,10 +177,8 @@ kubectl delete -f app-ingress.yaml
 kubectl delete -f cluster-issuer.yaml
 ```
 
----
-
 ## 📧 Contact
 
 **Author**: Emeka U.
-📬 <pumej1985@gmail.com>
+📬 <pumej1985@gmail.com>  
 🌐 [https://github.com/Mexxy-lab](https://github.com/emeka-umejiofor)
