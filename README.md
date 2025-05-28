@@ -73,14 +73,6 @@ kubectl get pods -n django
 kubectl get svc -n ingress-nginx
 ```
 
-### 2️⃣ Install cert-manager & ClusterIssuer
-
-Install cert-manager (for Let’s Encrypt TLS):
-
-```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.1/cert-manager.yaml
-```
-
 ### 3️⃣ Port-Forward NGINX Ingress Locally
 
 ```bash
