@@ -25,6 +25,7 @@ Install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"      | Used to generate ramdom key. 
 ```
 
 Make sure to spin up the mysql container or service locally also. This will let Django running locally connect to MySQL at 127.0.0.1.
