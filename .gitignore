@@ -11,6 +11,7 @@ django-frontend/node_modules
 # production
 /build
 
+./django-frontend/.env
 # misc
 .DS_Store
 .env.local
