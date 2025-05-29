@@ -25,8 +25,8 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy the built React files from build stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Expose port 80 (default for nginx)
-EXPOSE 80
+# Expose port 3001 (default for nginx is 80 though)
+EXPOSE 3001
 
 # Run nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]
