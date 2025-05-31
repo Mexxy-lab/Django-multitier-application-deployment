@@ -11,6 +11,11 @@ class Command(BaseCommand):
             {'name': 'USB-C Hub', 'description': '7-in-1 USB-C hub with HDMI, USB, SD slots'},
             {'name': 'Mechanical Keyboard', 'description': 'RGB backlit keyboard with blue switches'},
             {'name': 'Noise Cancelling Headphones', 'description': 'Over-ear wireless headphones'},
+            {'name': 'Wireless Pad', 'description': 'Bluetooth-enabled'},
+            {'name': 'Laptop Charger', 'description': 'Adjustable aluminum charger'},
+            {'name': 'USB-A Hub', 'description': '8-in-1 USB-C hub with HDMI, USB, SD slots'},
+            {'name': 'Wired Keyboard', 'description': 'RGB backlit keyboard with blue switches'},
+            {'name': 'Noiseless-charger', 'description': 'Over-ear wireless chargers'},
         ]
 
         created_count = 0
